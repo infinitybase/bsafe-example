@@ -68,6 +68,11 @@ button {
     font-weight: 600;
 }
 
+button:disabled {
+    background: #4a9a64;
+    color: #0D3921;
+}
+
 .container {
 
 }

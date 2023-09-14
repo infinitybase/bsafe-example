@@ -1,6 +1,6 @@
 import {Vault} from "bsafe";
-import {Provider} from "fuels";
-import {useState} from "react";
+import {bn, Provider} from "fuels";
+import {useMemo, useState} from "react";
 
 type CreateBsafeVaultParams = {
     signers: string[];
@@ -12,6 +12,10 @@ const fuelProvider = new Provider('https://beta-3.fuel.network/graphql')
 const useCreateVault = () => {
     const [vault, setVault] = useState<Vault | undefined>()
     const [balance, setBalance] = useState('')
+
+    const hasBalance = useMemo(() => {
+        return bn(bn.parseUnits(balance)).gt(0);
+    }, [balance]);
 
     const createVault = async (params: CreateBsafeVaultParams) => {
         const _vault = new Vault({
@@ -37,6 +41,7 @@ const useCreateVault = () => {
     return {
         vault,
         balance,
+        hasBalance,
         createVault,
         getVaultBalance,
     }

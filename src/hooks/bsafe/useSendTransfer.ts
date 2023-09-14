@@ -1,34 +1,49 @@
-import {Transfer, Vault} from "bsafe";
-import {ITransferAsset} from "bsafe/dist/cjs/library/assets";
+import {Vault} from "bsafe";
 import {bn} from "fuels";
+import {useFuel} from "../fuel";
+import {useState} from "react";
 
-export interface InstanceTransactionParams {
+export interface UseSendTransferParams {
     vault: Vault;
-    assets: ITransferAsset[];
-    witnesses: string[];
+    account: string;
 }
 
 const NativeAssetId =
     '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-const instanceTransaction = async (params: InstanceTransactionParams) => {
-    const {witnesses, assets, vault} = params;
+const useSendTransfer = (params: UseSendTransferParams) => {
+    const [fuel] = useFuel();
 
-    const transaction = new Transfer({
-        vault,
-        assets,
-        witnesses,
-    });
+    const [isSending, setIsSending] = useState(false)
+    const [blockExplorerLink, setBlockExplorerLink] = useState('')
 
-    await transaction.instanceTransaction();
+    const send = async (to: string) => {
+        setBlockExplorerLink('');
+        setIsSending(true);
 
-    return transaction;
-}
+        try {
+            const transfer = await params.vault!.includeTransaction([
+                {
+                    amount: bn(bn.parseUnits('0.001')).format(),
+                    assetId: NativeAssetId,
+                    to
+                }
+            ], []);
 
-const useSendTransfer = (vault?: Vault) => {
-   return {
-       vault,
-   }
+            const wallet = await fuel.getWallet(params.account);
+            const signature = await wallet.signMessage(transfer.transaction.getHashTxId());
+
+            transfer.transaction.witnesses = [signature]
+
+            const transactionResponse = await transfer.transaction.sendTransaction();
+
+            setBlockExplorerLink(transactionResponse.block);
+        } finally {
+            setIsSending(false)
+        }
+    }
+
+    return {send, isSending, blockExplorerLink};
 }
 
 export {useSendTransfer};

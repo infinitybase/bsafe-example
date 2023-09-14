@@ -1,20 +1,13 @@
-import {useIsConnected, useCreateVault} from "./hooks";
+import {useIsConnected, useCreateVault, useSendTransfer} from "./hooks";
 import {ConnectWallet, CreateVaultForm, VaultDetails} from "./components";
+import {SendTransaction} from "./components/SendTransaction.tsx";
 
 function App() {
-    const {
-        connect,
-        isConnecting,
-        isConnected,
-        account,
-    } = useIsConnected();
+    const {connect, isConnecting, isConnected, account,} = useIsConnected();
 
-    const {
-        vault,
-        balance,
-        createVault,
-        getVaultBalance
-    } = useCreateVault();
+    const {vault, balance, hasBalance, createVault, getVaultBalance} = useCreateVault();
+
+    const {send, isSending, blockExplorerLink} = useSendTransfer({account, vault: vault!});
 
     return (
         <div className="container">
@@ -48,6 +41,14 @@ function App() {
                     onRefresh={() => {
                         getVaultBalance();
                     }}
+                />
+            )}
+
+            {hasBalance && (
+                <SendTransaction
+                    link={blockExplorerLink}
+                    onSend={(address) => send(address)}
+                    isSending={isSending}
                 />
             )}
         </div>
