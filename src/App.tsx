@@ -1,17 +1,19 @@
-import { useIsConnected } from "./hooks";
-import { ConnectWallet } from "./components";
+import { useIsConnected, useVault, useTransfer } from "./hooks";
+import {ConnectWallet, CreateVaultForm, VaultDetails} from "./components";
+import {CreateTransaction} from "./components/CreateTransaction.tsx";
+import {BaseAssetId, bn} from "fuels";
 //import { SendTransaction } from "./components/SendTransaction.tsx";
 
 function App() {
   const { connect, isConnecting, isConnected, account } = useIsConnected();
 
-  //   const { vault, balance, hasBalance, createVault, getVaultBalance } =
-  //     useCreateVault();
+    const { vault, balance, hasBalance, createVault, getVaultBalance } =
+        useVault();
 
-  //   const { send, isSending, blockExplorerLink } = useSendTransfer({
-  //     account,
-  //     vault: vault!,
-  //   });
+    const { transfer, create, isSending } = useTransfer({
+      account,
+      vault: vault!,
+    });
 
   return (
     <div className="container">
@@ -24,14 +26,13 @@ function App() {
 
       <br />
 
-      {/* {account && !vault && (
+      {account && !vault && (
         <CreateVaultForm
           onCreate={(addresses) => {
-            console.log(addresses);
-            // createVault({
-            //   signers: addresses,
-            //   signatureLength: addresses.length,
-            // });
+            createVault({
+              signers: addresses,
+              signatureLength: addresses.length,
+            });
           }}
           hasVault={!!vault}
         />
@@ -49,12 +50,20 @@ function App() {
       )}
 
       {hasBalance && (
-        <SendTransaction
-          link={blockExplorerLink}
-          onSend={(address) => send(address)}
-          isSending={isSending}
+        <CreateTransaction
+          link={transfer?.makeBlockUrl('') ?? ''}
+          onSend={(params) => create({
+              witnesses: [],
+              name: 'Transaction example',
+              assets: [{
+                  assetId: BaseAssetId,
+                  amount: bn(bn.parseUnits(params.amount)).format(),
+                  to: params.address,
+              }]
+          })}
+          isCreating={isSending}
         />
-      )} */}
+      )}
     </div>
   );
 }

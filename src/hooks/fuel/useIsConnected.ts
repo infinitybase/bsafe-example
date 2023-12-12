@@ -1,12 +1,20 @@
 import {useFuel} from "./useFuel.ts";
 import {useEffect, useState} from "react";
+import {useAuth} from "../bsafe/useAuth.ts";
 
 const useIsConnected = () => {
     const [fuel] = useFuel();
+    const {createAuth} = useAuth();
 
     const [account, setAccount] = useState('')
     const [isConnected, setIsConnected] = useState(false)
     const [isConnecting, setIsConnecting] = useState(false)
+
+    useEffect(() => {
+        if (!!account) {
+            createAuth(account);
+        }
+    }, [account]);
 
     const handleConnect = async () => {
         setIsConnecting(true)
