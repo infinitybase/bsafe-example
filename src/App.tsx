@@ -10,7 +10,7 @@ function App() {
     const { vault, balance, hasBalance, createVault, getVaultBalance } =
         useVault();
 
-    const { transfer, create, isSending } = useTransfer({
+    const { transfer, create, isSigned, sign, isSent, send } = useTransfer({
       account,
       vault: vault!,
     });
@@ -51,8 +51,12 @@ function App() {
 
       {hasBalance && (
         <CreateTransaction
-          link={transfer?.makeBlockUrl('') ?? ''}
-          onSend={(params) => create({
+          isSent={isSent}
+          isSigned={isSigned}
+          transfer={transfer!}
+          onSend={() => send()}
+          onSign={() => sign()}
+          onCreate={(params) => create({
               witnesses: [],
               name: 'Transaction example',
               assets: [{
@@ -61,7 +65,6 @@ function App() {
                   to: params.address,
               }]
           })}
-          isCreating={isSending}
         />
       )}
     </div>

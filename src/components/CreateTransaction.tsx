@@ -1,13 +1,17 @@
 import {useState} from "react";
+import {Transfer} from "bsafe";
 
 interface Props {
-    onSend: (params: {address: string, amount: string}) => void;
-    link: string;
-    isCreating: boolean;
+    onCreate: (params: {address: string, amount: string}) => void;
+    onSign: () => void;
+    onSend: () => void;
+    isSigned: boolean;
+    isSent: boolean;
+    transfer: Transfer;
 }
 
 const CreateTransaction = (props: Props) => {
-    const {isCreating, onSend, link} = props;
+    const {onCreate, transfer, onSign, isSigned, isSent, onSend} = props;
 
     const [address, setAddress] = useState('')
     const [amount, setAmount] = useState('')
@@ -29,14 +33,28 @@ const CreateTransaction = (props: Props) => {
                 placeholder="Amount"
             />
             <br/>
-            <button
-                disabled={isCreating}
-                onClick={() => onSend({address, amount})}
-            >
-                {isCreating ? 'Sending...' : 'Send transaction'}
-            </button>
-            {link && (
-                <button onClick={() => window.open(link, '_blank')}>
+            <div style={{display: 'flex', gap: 2}}>
+                <button
+                    disabled={!!transfer}
+                    onClick={() => onCreate({address, amount})}
+                >
+                    Create transaction
+                </button>
+                <button
+                    disabled={isSigned}
+                    onClick={() => onSign()}
+                >
+                    Sign
+                </button>
+                <button
+                    disabled={isSent}
+                    onClick={() => onSend()}
+                >
+                    Send
+                </button>
+            </div>
+            {isSent && (
+                <button onClick={() => window.open(transfer.makeBlockUrl('bsafe'), '_blank')}>
                     Show in explorer
                 </button>
             )}

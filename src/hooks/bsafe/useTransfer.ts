@@ -1,4 +1,4 @@
-import {AuthService, IFormatTransfer, Transfer, Vault} from "bsafe";
+import {IFormatTransfer, Transfer, Vault} from "bsafe";
 import {useState} from "react";
 import {useFuel} from "../fuel";
 import {useStore} from "./useStore.ts";
@@ -10,45 +10,47 @@ export interface TransferParams {
 
 const useTransfer = ({vault}: TransferParams) => {
   const [fuel] = useFuel();
-  const {auth} = useStore();
+  const {session} = useStore();
   const [transfer, setTransfer] = useState<Transfer | null>(null)
-  const [isSending, setIsSending] = useState(false)
+  const [isSent, setIsSent] = useState(false)
+  const [isSigned, setIsSigned] = useState(false)
 
   const send = async () => {
+    debugger;
     if (!transfer) return;
 
-    setIsSending(true);
     await transfer.send();
     const resume = await transfer.wait();
-    setIsSending(false);
+    setIsSent(true);
     return resume;
   };
 
-  const create = async (txParams: IFormatTransfer) => {
-    console.log(vault)
+  const sign = async () => {
+    if (!transfer) return;
+
     const currentAccount = await fuel.currentAccount();
     const wallet = await fuel.getWallet(currentAccount);
-    const auxVault = await Vault.create({
-      predicateAddress: vault.address.toString(),
-      address: auth!.address,
-      token: auth!.token,
-    });
-    const tx = await auxVault.BSAFEIncludeTransaction({
+    await session!.signTransaction(wallet, transfer.BSAFETransactionId);
+
+    setIsSigned(true);
+  }
+
+  const create = async (txParams: IFormatTransfer) => {
+    const tx = await vault.BSAFEIncludeTransaction({
       ...txParams,
       witnesses: [],
     });
     setTransfer(tx);
-    const authService = await AuthService.create(currentAccount, vault.provider.url);
-    await authService.signTransaction(wallet, tx.BSAFETransactionId);
-    send();
     return tx;
   };
 
   return {
+    sign,
     send,
     create,
+    isSent,
+    isSigned,
     transfer,
-    isSending,
   };
 };
 
